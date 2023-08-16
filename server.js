@@ -6,7 +6,6 @@ const uri = "mongodb+srv://rajasinghbhataria:raja123@cluster0.tmzgpgd.mongodb.ne
 let port = process.env.port || 3000;
 let collection;
 
-app.use(express.static(__dirname + '/'));
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
@@ -28,37 +27,38 @@ async function runDBConnection() {
         console.error(ex);
     }
 }
-
-app.get('/', function (req,res) {
-    res.render('index.html');
+app.get('/', function (req, res) {
+    res.sendFile(__dirname + '/index.html');
 });
 
-app.get('/api/cats', (req,res) => {
-    getAllCats((err,result)=>{
-        if (!err) {
-            res.json({statusCode:200, data:result, message:'get all cats successful'});
-        }
-    });
-});
 
-app.post('/api/cat', (req,res)=>{
-    let cat = req.body;
-    postCat(cat, (err, result) => {
-        if (!err) {
-            res.json({statusCode:201, data:result, message:'success'});
-        }
-    });
-});
 
-function postCat(cat,callback) {
-    collection.insertOne(cat,callback);
+
+app.post('/api/cat', async (req, res) => {
+    try {
+        const cat = req.body;
+        const result = await postCat(cat);
+        res.status(201).json({ statusCode: 201, data: result, message: 'Success' });
+    } catch (err) {
+        res.status(500).json({ statusCode: 500, message: 'Internal server error' });
+    }
+});
+app.get('/api/cats', async (req, res) => {
+    try {
+        const result = await getAllCats();
+        res.json({ statusCode: 200, data: result, message: 'Get all cats successful' });
+    } catch (err) {
+        res.status(500).json({ statusCode: 500, message: 'Internal server error' });
+    }
+});
+async function postCat(cat) {
+    return collection.insertOne(cat);
 }
 
-function getAllCats(callback){
-    collection.find({}).toArray(callback);
+async function getAllCats() {
+    return collection.find({}).toArray();
 }
-
-app.listen(port, ()=>{
-    console.log('express server started');
-    runDBConnection();
+app.listen(port, async () => {
+    console.log('Express server started');
+    await runDBConnection();
 });
