@@ -27,38 +27,42 @@ async function runDBConnection() {
         console.error(ex);
     }
 }
-app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/index.html');
+
+app.get('/', function (req,res) {
+    res.render('index.html');
 });
 
 
 
+app.post('/api/cat', (req,res)=>{
+    let cat = req.body;
+    postCat(cat, (err, result) => {
+        if (!err) {
+            res.json({statusCode:200, data:result, message:'success'});
+        }
+    });
+});
 
-app.post('/api/cat', async (req, res) => {
-    try {
-        const cat = req.body;
-        const result = await postCat(cat);
-        res.status(201).json({ statusCode: 201, data: result, message: 'Success' });
-    } catch (err) {
-        res.status(500).json({ statusCode: 500, message: 'Internal server error' });
-    }
+app.get('/api/cats', (req,res) => {
+    getAllCats((err,result)=>{
+        if (!err) {
+            res.json({statusCode:200, data:result, message:'get all cats successful'});
+        }
+    });
 });
-app.get('/api/cats', async (req, res) => {
-    try {
-        const result = await getAllCats();
-        res.json({ statusCode: 200, data: result, message: 'Get all cats successful' });
-    } catch (err) {
-        res.status(500).json({ statusCode: 500, message: 'Internal server error' });
-    }
-});
-async function postCat(cat) {
-    return collection.insertOne(cat);
+
+
+function postCat(cat,callback) {
+    collection.insertOne(cat,callback);
 }
 
-async function getAllCats() {
-    return collection.find({}).toArray();
+function getAllCats(callback){
+    collection.find({}).toArray(callback);
 }
-app.listen(port, async () => {
+
+
+
+app.listen(port, ()=>{
     console.log('Express server started');
-    await runDBConnection();
+    runDBConnection();
 });
