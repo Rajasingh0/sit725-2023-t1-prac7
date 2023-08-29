@@ -1,68 +1,20 @@
 let express = require('express');
 let app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://rajasinghbhataria:raja123@cluster0.tmzgpgd.mongodb.net/?retryWrites=true&w=majority";
-
 let port = process.env.port || 3000;
-let collection;
 
+require('./database_connection');
+let router = require("./routers/router");
+
+
+app.use(express.static(__dirname + '/public'));
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
-
-const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
-});
-
-
-async function runDBConnection() {
-    try {
-        await client.connect();
-        collection = client.db().collection('Cat');
-        console.log(collection);
-    } catch(ex) {
-        console.error(ex);
-    }
-}
-
-app.get('/', function (req,res) {
-    res.render('index.html');
-});
-
-
-
-app.post('/api/cat', (req,res)=>{
-    let cat = req.body;
-    postCat(cat, (err, result) => {
-        if (!err) {
-            res.json({statusCode:200, data:result, message:'success'});
-        }
-    });
-});
-
-app.get('/api/cats', (req,res) => {
-    getAllCats((err,result)=>{
-        if (!err) {
-            res.json({statusCode:200, data:result, message:'get all cats successful'});
-        }
-    });
-});
-
-
-function postCat(cat,callback) {
-    collection.insertOne(cat,callback);
-}
-
-function getAllCats(callback){
-    collection.find({}).toArray(callback);
-}
-
+app.use(express.urlencoded({
+    extended: false
+}));
+app.use('/api/cat', router);
 
 
 app.listen(port, ()=>{
     console.log('Express server started');
-    runDBConnection();
+    // runDBConnection();
 });
