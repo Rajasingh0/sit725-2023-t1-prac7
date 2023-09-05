@@ -1,9 +1,13 @@
 let express = require('express');
 let app = express();
-let port = process.env.port || 3000;
+let port = process.env.port || 3001;
 
 require('./dbConnection');
 let router = require("./router/router");
+
+const { Socket } = require('socket.io');
+let http = require('http').createServer(app);
+let io = require('socket.io')(http);
 
 
 app.use(express.static(__dirname + '/public'));
@@ -12,6 +16,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/cat', router);
 
 
-app.listen(port, ()=>{
+
+io.on('connection', (socket) => {
+    console.log('a rocket is connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+    setInterval(() => {
+        socket.emit('number', parseInt(Math.random() * 10));
+    }, 1000);
+});
+
+
+http.listen(port, () => {
     console.log('Express server started');
 });
