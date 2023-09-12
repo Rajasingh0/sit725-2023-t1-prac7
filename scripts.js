@@ -58,4 +58,5 @@ $(document).ready(function () {
     });
     $('.modal').modal();
     getAllCats();
+    console.log('ready');
 });
